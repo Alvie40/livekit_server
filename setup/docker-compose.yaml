@@ -23,15 +23,12 @@ services:
       - livekit
 
   caddyl4:
-    image: caddy:latest
+    image: livekit/caddyl4
     restart: always
     ports:
       - "443:443"
-      - "80:80"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy_data:/data
-      - ./caddy_config:/config
+      - ./caddy.yaml:/etc/caddy-config.yaml
     depends_on:
       - livekit-server
     networks:
