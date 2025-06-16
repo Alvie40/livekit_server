@@ -3,7 +3,7 @@
 services:
   caddy:
     image: livekit/caddyl4
-    command: run --config /etc/caddy.yaml --adapter yaml
+    command: run --config /etc/caddy/caddy.yaml --adapter yaml
     restart: unless-stopped
     network_mode: "host"
     volumes:
