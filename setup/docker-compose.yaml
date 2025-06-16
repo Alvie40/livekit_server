@@ -3,9 +3,7 @@ services:
     image: livekit/livekit-server:latest
     restart: always
     ports:
-      - "7880:7880"   # HTTP API
-      - "7881:7881"   # TCP + UDP (WebRTC ingress)
-      - "7881:7881/udp"   # Explicitly expose UDP
+      - "7880:7880"   # HTTP API e WebSocket (wss)
     environment:
       - LIVEKIT_CONFIG_FILE=/etc/livekit.yaml
       - "LIVEKIT_KEYS=APIgNxWzk3h8fpH: eTMC1y4k94cOyo1Y1zj5i0eVO6eGoe75CIjebOg4j6bB"
@@ -13,24 +11,17 @@ services:
       - ./livekit.yaml:/etc/livekit.yaml
     depends_on:
       - redis
+    labels:
+      - "caddy=livekit.doctorkit.satmed.net"
+      - "caddy.reverse_proxy={{upstreams 7880}}"
+      - "caddy.tls=internal"
+      - "caddy.encode=gzip"
     networks:
       - livekit
 
   redis:
     image: redis:7-alpine
     restart: always
-    networks:
-      - livekit
-
-  caddyl4:
-    image: livekit/caddyl4
-    restart: always
-    ports:
-      - "443:443"
-    volumes:
-      - ./caddy.yaml:/etc/caddy-config.yaml
-    depends_on:
-      - livekit-server
     networks:
       - livekit
 
