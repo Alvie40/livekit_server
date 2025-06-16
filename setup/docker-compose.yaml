@@ -3,11 +3,11 @@
 services:
   caddy:
     image: livekit/caddyl4
-    command: run --config /app/caddy.yaml --adapter yaml
+    command: run --config /etc/caddy/Caddyfile --adapter yaml
     restart: unless-stopped
     network_mode: "host"
     volumes:
-      - ./caddy.yaml:/app/caddy.yaml
+      - ./caddy.yaml:/etc/caddy/Caddyfile
       - ./caddy_data:/data
   livekit:
     image: livekit/livekit-server:latest
