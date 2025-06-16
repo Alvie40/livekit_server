@@ -1,38 +1,14 @@
-logging:
-  logs:
-    default:
-      level: INFO
-storage:
-  "module": "file_system"
-  "root": "/data"
+admin:
+  disabled: false
+
 apps:
-  tls:
-    certificates:
-      automate:
-        - livekit.doctorkit.satmed.net
-        - livekit-turn.doctorkit.satmed.net
   layer4:
     servers:
-      main:
+      tls:
         listen: [":443"]
         routes:
-          - match:
-            - tls:
-                sni:
-                  - "livekit-turn.doctorkit.satmed.net"
-            handle:
-              - handler: tls
-              - handler: proxy
-                upstreams:
-                  - dial: ["localhost:5349"]
-          - match:
-              - tls:
-                  sni:
-                    - "livekit.doctorkit.satmed.net"
-            handle:
-              - handler: tls
-                connection_policies:
-                  - alpn: ["http/1.1"]
-              - handler: proxy
-                upstreams:
-                  - dial: ["localhost:7880"]
+          - handle:
+              - tls
+              - proxy:
+                  upstreams:
+                    - dial: livekit-server:7881

@@ -1,0 +1,7 @@
+localhost, :80 {
+	reverse_proxy livekit-server:7880
+}
+
+localhost:443 {
+	reverse_proxy livekit-server:7880
+}

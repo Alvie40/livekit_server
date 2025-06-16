@@ -1,25 +1,42 @@
-# This docker-compose requires host networking, which is only available on Linux
-# This compose will not function correctly on Mac or Windows
 services:
-  caddy:
-    image: livekit/caddyl4
-    command: run --config /etc/caddy-config.yaml --adapter yaml
-    restart: unless-stopped
-    network_mode: "host"
-    volumes:
-      - ./caddy.yaml:/etc/caddy-config.yaml
-      - ./caddy_data:/data
-  livekit:
+  livekit-server:
     image: livekit/livekit-server:latest
-    command: --config /etc/livekit.yaml
-    restart: unless-stopped
-    network_mode: "host"
+    restart: always
+    ports:
+      - "7880:7880"   # HTTP API
+      - "7881:7881"   # TCP + UDP (WebRTC ingress)
+      - "7881:7881/udp"   # Explicitly expose UDP
+    environment:
+      - LIVEKIT_CONFIG_FILE=/etc/livekit.yaml
+      - "LIVEKIT_KEYS=APIgNxWzk3h8fpH: eTMC1y4k94cOyo1Y1zj5i0eVO6eGoe75CIjebOg4j6bB"
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml
+    depends_on:
+      - redis
+    networks:
+      - livekit
+
   redis:
     image: redis:7-alpine
-    command: redis-server /etc/redis.conf
-    restart: unless-stopped
-    network_mode: "host"
+    restart: always
+    networks:
+      - livekit
+
+  caddyl4:
+    image: caddy:latest
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
     volumes:
-      - ./redis.conf:/etc/redis.conf
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+    depends_on:
+      - livekit-server
+    networks:
+      - livekit
+
+networks:
+  livekit:
+    driver: bridge

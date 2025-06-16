@@ -1,29 +1,12 @@
 port: 7880
-bind_addresses:
-    - ""
+bind_addresses: ["0.0.0.0"]
 rtc:
-    tcp_port: 7881
-    port_range_start: 50000
-    port_range_end: 60000
-    use_external_ip: true
-    enable_loopback_candidate: false
+  udp_port: 7881
+  tcp_port: 7881
+  use_external_ip: true
 redis:
-    address: localhost:6379
-    username: ""
-    password: ""
-    db: 0
-    use_tls: false
-    sentinel_master_name: ""
-    sentinel_username: ""
-    sentinel_password: ""
-    sentinel_addresses: []
-    cluster_addresses: []
-    max_redirects: null
-turn:
-    enabled: true
-    domain: livekit-turn.doctorkit.satmed.net
-    tls_port: 5349
-    udp_port: 3478
-    external_tls: true
+  address: redis:6379
 keys:
-    APIgNxWzk3h8fpH: eTMC1y4k94cOyo1Y1zj5i0eVO6eGoe75CIjebOg4j6bB
+  APIgNxWzk3h8fpH: eTMC1y4k94cOyo1Y1zj5i0eVO6eGoe75CIjebOg4j6bB
+log_level: info
+development: false

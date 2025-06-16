@@ -1,0 +1,3 @@
+# Caddy data and config directories (generated at runtime)
+caddy_data/
+caddy_config/
