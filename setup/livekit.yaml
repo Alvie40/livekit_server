@@ -1,12 +1,15 @@
 port: 7880
 bind_addresses: ["0.0.0.0"]
 rtc:
-  udp_port: 7881
   tcp_port: 7881
+  port_range_start: 10000
+  port_range_end: 10100
   use_external_ip: true
 redis:
   address: redis:6379
 keys:
   APIgNxWzk3h8fpH: eTMC1y4k94cOyo1Y1zj5i0eVO6eGoe75CIjebOg4j6bB
 log_level: info
+region: local
+node_id: livekit-server
 development: false

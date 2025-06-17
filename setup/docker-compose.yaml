@@ -1,30 +1,43 @@
+version: '3.8'
+
 services:
   livekit-server:
     image: livekit/livekit-server:latest
-    restart: always
+    container_name: livekit-server
+    restart: unless-stopped
     ports:
-      - "7880:7880"   # HTTP API e WebSocket (wss)
+      - "7880:7880"   # HTTP/WebSocket API
+      - "7881:7881"   # Plain TCP for media
+      - "10000-10100:10000-10100/udp" # UDP media (limited range for testing)
     environment:
-      - LIVEKIT_CONFIG_FILE=/etc/livekit.yaml
+      - LIVEKIT_CONFIG_FILE=/config/livekit.yaml
       - "LIVEKIT_KEYS=APIgNxWzk3h8fpH: eTMC1y4k94cOyo1Y1zj5i0eVO6eGoe75CIjebOg4j6bB"
     volumes:
-      - ./livekit.yaml:/etc/livekit.yaml
+      - ./livekit.yaml:/config/livekit.yaml
     depends_on:
       - redis
-    labels:
-      - "caddy=livekit.doctorkit.satmed.net"
-      - "caddy.reverse_proxy={{upstreams 7880}}"
-      - "caddy.tls=internal"
-      - "caddy.encode=gzip"
     networks:
-      - livekit
+      - livekit-net
+
+  caddyl4:
+    image: livekit/caddyl4:latest
+    container_name: caddyl4
+    restart: unless-stopped
+    ports:
+      - "8448:443" # Expose TLS entrypoint via port 8448
+    volumes:
+      - ./caddy.json:/etc/caddy-config.json
+    command: ["run", "--config", "/etc/caddy-config.json"]
+    networks:
+      - livekit-net
 
   redis:
     image: redis:7-alpine
-    restart: always
+    container_name: redis
+    restart: unless-stopped
     networks:
-      - livekit
+      - livekit-net
 
 networks:
-  livekit:
+  livekit-net:
     driver: bridge

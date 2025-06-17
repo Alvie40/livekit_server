@@ -1,32 +1,50 @@
-# LiveKit Server with Coolify Integration
+# LiveKit Server with Caddy L4 Proxy
 
-This setup provides a production-ready LiveKit server configuration optimized for deployment with Coolify.
+This setup provides a production-ready LiveKit server configuration with Caddy L4 proxy for TLS termination on port 8448.
 
 ## Architecture
 
 - **LiveKit Server**: Real-time communication server
+- **Caddy L4 Proxy**: TLS termination and TCP proxy
 - **Redis**: Session storage and scaling support
-- **Coolify Proxy**: Automatic HTTPS termination and domain routing
 
 ## Key Features
 
-✅ **Coolify Integration**: Uses labels for automatic proxy configuration  
-✅ **HTTPS Support**: Automatic TLS termination via coolify-proxy  
+✅ **TLS Security**: Caddy L4 proxy handles TLS termination  
+✅ **Port 8448**: External access via secure port 8448  
 ✅ **WebSocket Support**: Full WebRTC and WebSocket connectivity  
-✅ **Scalable**: Redis backend for multi-instance deployments  
+✅ **UDP Media**: Dedicated UDP range for media streaming  
 ✅ **Production Ready**: Proper logging, restart policies, and networking  
 
 ## Configuration
 
-### Domain & SSL
-The setup is configured for `livekit.doctorkit.satmed.net` with automatic TLS via coolify-proxy labels:
+### Ports
+
+- **8448**: External HTTPS/WSS access (mapped to container port 443)
+- **7880**: LiveKit HTTP API (internal)
+- **7881**: LiveKit TCP for media (internal)
+- **5000-6000**: UDP media range
+- **6379**: Redis (internal network only)
+
+### Caddy L4 Configuration
+
+The `caddy.yaml` file configures Layer 4 proxy:
 
 ```yaml
-labels:
-  - "caddy=livekit.doctorkit.satmed.net"
-  - "caddy.reverse_proxy={{upstreams 7880}}"
-  - "caddy.tls=internal"
-  - "caddy.encode=gzip"
+admin:
+  disabled: false
+
+apps:
+  layer4:
+    servers:
+      tls:
+        listen: [":443"]
+        routes:
+          - handle:
+              - tls
+              - proxy:
+                  upstreams:
+                    - dial: livekit-server:7881
 ```
 
 ### LiveKit API Keys
@@ -43,33 +61,57 @@ environment:
 ```bash
 cd setup/
 docker compose up -d
+
+# Check services
+docker compose ps
+
+# Test LiveKit API
 curl http://localhost:7880  # Should return "OK"
+
+# Test TLS connectivity (once domain is configured)
+./healthcheck.sh yourdomain.com 8448
 ```
 
-### Coolify Deployment
-1. Create new service in Coolify
-2. Set repository to this project
-3. Set build context to `setup/`
-4. Configure domain in Coolify settings
-5. Deploy
+### Production Deployment
+
+1. **Update DNS**: Point your domain to the server IP
+2. **Configure domain**: Update `caddy.yaml` if needed
+3. **Firewall**: Open port 8448 for external access
+4. **Deploy**: Run `docker compose up -d`
+5. **Validate**: Use `healthcheck.sh` to verify TLS
+
+## Frontend Integration
+
+See `FRONTEND_EXAMPLES.md` for detailed frontend configuration examples.
+
+### Quick Example (React/Next.js)
+
+```javascript
+import { connect } from 'livekit-client';
+
+const room = await connect(
+  'wss://yourdomain.com:8448', // External port 8448
+  token,
+  {
+    autoSubscribe: true,
+  }
+);
+```
 
 ## Files
 
 - `docker-compose.yaml` - Main orchestration file
+- `caddy.yaml` - Caddy L4 proxy configuration
 - `livekit.yaml` - LiveKit server configuration
+- `healthcheck.sh` - TLS validation script
+- `FRONTEND_EXAMPLES.md` - Frontend integration examples
 - `redis.conf` - Redis configuration (optional)
-- `init_script.sh` - Initialization script
-
-## Ports
-
-- **7880**: HTTP API and WebSocket (exposed)
-- **6379**: Redis (internal network only)
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `LIVEKIT_CONFIG_FILE` | Path to config file | `/etc/livekit.yaml` |
+| `LIVEKIT_CONFIG_FILE` | Path to config file | `/config/livekit.yaml` |
 | `LIVEKIT_KEYS` | API key pairs | See docker-compose.yaml |
 
 ## Troubleshooting
@@ -78,30 +120,34 @@ curl http://localhost:7880  # Should return "OK"
 ```bash
 docker compose ps
 docker compose logs livekit-server
+docker compose logs caddyl4
 docker compose logs redis
 ```
 
 ### Test Connectivity
 ```bash
-# Local HTTP
+# Local HTTP API
 curl http://localhost:7880
 
-# WebSocket test (if deployed)
-websocat wss://livekit.doctorkit.satmed.net/rtc
+# TLS validation
+./healthcheck.sh yourdomain.com 8448
+
+# Check if port is open
+telnet yourdomain.com 8448
 ```
 
 ### Common Issues
 
-1. **"is a directory" errors**: Ensure file mounting works in your environment
-2. **Connection refused**: Check if services are running and ports are exposed
-3. **SSL errors**: Verify Coolify proxy configuration and domain settings
+1. **Port 8448 blocked**: Check firewall settings
+2. **DNS not pointing**: Verify domain DNS configuration
+3. **TLS certificate issues**: Check Caddy logs for certificate generation
+4. **Container networking**: Ensure all services are on same network
 
-## Migration from Legacy Setup
+## Production Checklist
 
-This setup replaces the previous 3-service architecture (LiveKit + Redis + Caddy) with a streamlined 2-service setup that leverages Coolify's built-in proxy capabilities.
-
-**Removed components:**
-- Custom Caddy L4 proxy service
-- Manual SSL certificate management
-- Complex port forwarding configuration
-- Separate network bridges for proxy communication
+- [ ] DNS configured to point to server
+- [ ] Port 8448 open in firewall
+- [ ] Update API keys in docker-compose.yaml
+- [ ] Test with `healthcheck.sh`
+- [ ] Frontend configured with correct WSS URL
+- [ ] SSL certificate generated successfully
