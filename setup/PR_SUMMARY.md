@@ -7,11 +7,10 @@ Todos os componentes foram implementados e testados com sucesso:
 ### **🔧 Componentes Implementados**
 
 1. **📁 docker-compose.yaml** - Orquestração de 3 serviços
-2. **📁 caddy.json** - Configuração L4 proxy com TLS termination
-3. **📁 caddy.yaml** - Configuração alternativa em YAML
-4. **📁 FRONTEND_EXAMPLES.md** - Exemplos de integração frontend
-5. **📁 healthcheck.sh** - Script de validação TLS
-6. **📁 README.md** - Documentação completa atualizada
+2. **📁 caddy.yaml** - Configuração L4 proxy YAML (otimizada para Coolify)
+3. **📁 FRONTEND_EXAMPLES.md** - Exemplos de integração frontend
+4. **📁 healthcheck.sh** - Script de validação TLS
+5. **📁 README.md** - Documentação completa atualizada
 
 ### **🌐 Arquitetura Final**
 

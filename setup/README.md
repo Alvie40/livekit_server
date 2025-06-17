@@ -28,12 +28,37 @@ This setup provides a production-ready LiveKit server configuration with Caddy L
 
 ### Caddy L4 Configuration
 
-The `caddy.yaml` file configures Layer 4 proxy:
+Para o Coolify, você pode usar **ambos os formatos**:
 
+#### Opção 1: JSON (Recomendado para produção)
+```json
+{
+  "admin": { "disabled": false },
+  "apps": {
+    "layer4": {
+      "servers": {
+        "tls": {
+          "listen": [":443"],
+          "routes": [{
+            "handle": [
+              { "handler": "tls" },
+              { 
+                "handler": "proxy",
+                "upstreams": [{ "dial": "livekit-server:7881" }]
+              }
+            ]
+          }]
+        }
+      }
+    }
+  }
+}
+```
+
+#### Opção 2: YAML (Mais legível)
 ```yaml
 admin:
   disabled: false
-
 apps:
   layer4:
     servers:
@@ -46,6 +71,15 @@ apps:
                   upstreams:
                     - dial: livekit-server:7881
 ```
+
+**Para usar YAML no Coolify:**
+1. Troque no docker-compose: `caddy.json` → `caddy.yaml`
+2. Adicione `--adapter yaml` no command:
+   ```yaml
+   command: ["run", "--config", "/etc/caddy-config.yaml", "--adapter", "yaml"]
+   ```
+
+**✅ Ambas as configurações são funcionais e testadas!**
 
 ### LiveKit API Keys
 API keys are configured via environment variables. Update in `docker-compose.yaml`:

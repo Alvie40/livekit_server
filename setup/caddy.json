@@ -1,0 +1,31 @@
+{
+  "admin": {
+    "disabled": false
+  },
+  "apps": {
+    "layer4": {
+      "servers": {
+        "tls": {
+          "listen": [":443"],
+          "routes": [
+            {
+              "handle": [
+                {
+                  "handler": "tls"
+                },
+                {
+                  "handler": "proxy",
+                  "upstreams": [
+                    {
+                      "dial": "livekit-server:7881"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
